@@ -1,0 +1,9 @@
+main: eu.imninja.hardcoretogether.Main
+name: hardcoretogether
+version: 1.0
+author: InteractiveNinja
+
+commands:
+  hardcore:
+    description: Macht Hardcore schwieriger
+    usage: /hardcore
