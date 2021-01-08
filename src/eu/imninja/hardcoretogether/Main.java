@@ -32,11 +32,6 @@ public class Main extends JavaPlugin implements Listener  {
     @Override
     public void onEnable() {
         this.getServer().getPluginManager().registerEvents(this,this);
-        try {
-            changeModth();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         System.out.println(pluginName + ", aktiviert");
     }
 
@@ -110,16 +105,6 @@ public class Main extends JavaPlugin implements Listener  {
 
         FileOutputStream out = new FileOutputStream("server.properties");
         props.setProperty("level-name", wordlname + "_dead");
-        props.store(out, null);
-        out.close();
-    }
-    private void changeModth() throws IOException {
-
-        FileInputStream in = new FileInputStream("server.properties");
-        Properties props = new Properties();
-        props.load(in);
-        FileOutputStream out = new FileOutputStream("server.properties");
-        props.setProperty("motd", "\\\u00a74\\\u00a7lMINECRAFT HARDCORE\\\nDONT DIE");
         props.store(out, null);
         out.close();
     }
