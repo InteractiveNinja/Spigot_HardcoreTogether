@@ -1,6 +1,9 @@
 package eu.imninja.hardcoretogether;
 
+import net.minecraft.server.v1_16_R1.World;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Difficulty;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -8,16 +11,20 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
 
 
-public class Main extends JavaPlugin implements Listener {
+public class Main extends JavaPlugin implements Listener  {
 
     public static final String pluginName = "HardcoreTogether";
     private boolean modeEnabled = false;
@@ -25,6 +32,11 @@ public class Main extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         this.getServer().getPluginManager().registerEvents(this,this);
+        try {
+            changeModth();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         System.out.println(pluginName + ", aktiviert");
     }
 
@@ -35,8 +47,8 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if(label.equals("hardcore") && sender.isOp() && (sender instanceof Player)) {
-            if(modeEnabled) {
+        if(label.equals("hardcore")  && !(sender instanceof Player)) {
+            /*if(modeEnabled) {
                 modeEnabled = false;
                 sender.sendMessage("Hardcore wurde deaktiviert");
                 Collection<? extends Player> p = this.getServer().getOnlinePlayers();
@@ -44,11 +56,13 @@ public class Main extends JavaPlugin implements Listener {
                 p.forEach(player -> {
                     sendTitleToPlayer(player,"Hardcore", "Sterben ist erlaubt",ChatColor.GREEN);
                 });
-                Player player = (Player)sender;
+                Player player = p.iterator().next();
                 player.getWorld().setHardcore(false);
+                player.getWorld().setDifficulty(Difficulty.EASY);
+
                 return true;
 
-            } else {
+            } else {*/
                 sender.sendMessage("Hardcore wurde aktiviert");
                 modeEnabled = true;
                 Collection<? extends Player> p = this.getServer().getOnlinePlayers();
@@ -56,31 +70,35 @@ public class Main extends JavaPlugin implements Listener {
                 p.forEach(player -> {
                     sendTitleToPlayer(player,"Hardcore", "Versuch nicht zu sterben",ChatColor.RED);
                 });
-                Player player = (Player)sender;
+                timer("start");
+                Player player = p.iterator().next();
                 player.getWorld().setHardcore(true);
+                player.getWorld().setDifficulty(Difficulty.HARD);
                 return true;
-            }
+           // }
         }
-        return false;
+        return true;
     }
     @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent e) throws IOException {
+    public void onPlayerDeath(PlayerDeathEvent e) throws IllegalStateException, IOException {
         if(modeEnabled) {
             String playerName = e.getEntity().getName();
             String playerMessage = e.getDeathMessage();
+            int time =  timer("end");
             Collection<? extends Player> p = this.getServer().getOnlinePlayers();
-            p.forEach(player -> {
-                player.kickPlayer(ChatColor.RED +"Der Spieler, " + ChatColor.GOLD + playerName + ChatColor.RED + ", ist gestorben, RIP an die Welt\n " + " Der Server wird heruntergefahren");
-            });
-            changeFile();
-            this.getServer().shutdown();
-        }
-    }
+                    p.forEach(player -> {
+                        player.kickPlayer(ChatColor.RED + "Der Spieler, " + ChatColor.GOLD + playerName + ChatColor.RED + ", ist gestorben, RIP an die Welt\n " + " Der Server wird heruntergefahren\n" + e.getDeathMessage()+ "\n "+ ChatColor.GOLD +time +" Sekunden überlebt");
+                    });
+                    changeFile();
+                    this.getServer().shutdown();
+                }
+            };
 
     private void sendTitleToPlayer(Player p, String msg,String msg2,ChatColor color) {
         p.sendTitle(color + msg,color +msg2);
         p.playSound(p.getLocation(),Sound.ENTITY_WITHER_SPAWN,1f,1f);
     }
+
 
 
     private void changeFile() throws IOException {
@@ -94,6 +112,37 @@ public class Main extends JavaPlugin implements Listener {
         props.setProperty("level-name", wordlname + "_dead");
         props.store(out, null);
         out.close();
+    }
+    private void changeModth() throws IOException {
+
+        FileInputStream in = new FileInputStream("server.properties");
+        Properties props = new Properties();
+        props.load(in);
+        FileOutputStream out = new FileOutputStream("server.properties");
+        props.setProperty("motd", "\\\u00a74\\\u00a7lMINECRAFT HARDCORE\\\nDONT DIE");
+        props.store(out, null);
+        out.close();
+    }
+
+    int time = 0;
+    int t = 0;
+    private int timer(String type){
+
+        if(type.equals("start")) {
+            t = Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    time++;
+                }
+            }, 0L, 20L);
+        }
+        if(type.equals("end")) {
+            Bukkit.getScheduler().cancelTask(t);
+            return time;
+        }
+
+        return 0;
+
     }
 }
 
