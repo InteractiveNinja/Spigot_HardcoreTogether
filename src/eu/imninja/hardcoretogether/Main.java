@@ -87,7 +87,7 @@ public class Main extends JavaPlugin implements Listener  {
             int time =  timer("end");
             Collection<? extends Player> p = this.getServer().getOnlinePlayers();
                     p.forEach(player -> {
-                        player.kickPlayer(ChatColor.RED + "Der Spieler, " + ChatColor.GOLD + playerName + ChatColor.RED + ", ist gestorben, RIP an die Welt\n " + " Der Server wird heruntergefahren\n" + e.getDeathMessage()+ "\n "+ ChatColor.GOLD +time +" Sekunden überlebt");
+                        player.kickPlayer(ChatColor.RED + "Der Spieler, " + ChatColor.GOLD + playerName + ChatColor.RED + ", ist gestorben, RIP an die Welt\n " + " Der Server wird heruntergefahren\n" + e.getDeathMessage()+ "\n "+ ChatColor.GOLD + formatToTime(time));
                     });
                     changeFile();
                     this.getServer().shutdown();
@@ -143,6 +143,14 @@ public class Main extends JavaPlugin implements Listener  {
 
         return 0;
 
+    }
+
+    private String formatToTime (int seconds) {
+        int p1 = seconds % 60;
+        int p2 = seconds / 60;
+        int p3 = p2 % 60;
+        p2 = p2 / 60;
+        return p2 + ":" + p3 + ":" + p1 +" überlebt";
     }
 }
 
